@@ -1,0 +1,98 @@
+flowchart TB
+    subgraph Client["Client Tier"]
+        SPA["React SPA<br/>Vite - Tailwind - shadcn"]
+        TWIN["Digital Twin<br/>Leaflet + SVG floorplan"]
+        CHARTS["Analytics<br/>Recharts"]
+        VOICE["Voice Assistant<br/>Web Speech API"]
+    end
+
+    subgraph API["API Tier - FastAPI"]
+        AUTH["Auth Router<br/>JWT + RBAC"]
+        CLIN["Clinical Routers<br/>patients, admissions, beds"]
+        OPS["Operations Routers<br/>inventory, ambulances"]
+        SUS["Sustainability Routers<br/>energy, water, waste, carbon"]
+        AGENTR["Agent Router<br/>invoke, logs, cycle"]
+        ANALY["Analytics Router"]
+        RPT["Reports Router"]
+        WSH["WebSocket Hub"]
+    end
+
+    subgraph Domain["Service Tier"]
+        S1["Clinical Services"]
+        S2["Inventory Service"]
+        S3["Sustainability Services"]
+        S4["Notification Service"]
+        S5["Report Service"]
+        S6["Analytics Service"]
+    end
+
+    subgraph AI["Agent Tier"]
+        GRAPH["LangGraph Orchestrator"]
+        A1["10 Domain Agents"]
+        CREW["CrewAI Executive Crew"]
+        RAG["FAISS Retriever"]
+        REG["ML Model Registry"]
+        LLM["Gemini Client"]
+    end
+
+    subgraph Async["Worker Tier"]
+        CEL["Celery Workers"]
+        BEAT["Celery Beat"]
+        SIM["Simulation Engine"]
+    end
+
+    subgraph Data["Data Tier"]
+        MONGO[("MongoDB Atlas")]
+        REDIS[("Redis / Upstash")]
+        FAISS[("FAISS Index")]
+        CLOUD[("Cloudinary")]
+    end
+
+    subgraph Ext["External Services"]
+        GEM["Google Gemini API"]
+        OSRM["OSRM Routing"]
+    end
+
+    SPA --> AUTH
+    SPA --> CLIN
+    SPA --> OPS
+    TWIN --> SUS
+    CHARTS --> ANALY
+    VOICE --> AGENTR
+    SPA <--> WSH
+
+    AUTH --> S1
+    CLIN --> S1
+    OPS --> S2
+    SUS --> S3
+    ANALY --> S6
+    RPT --> S5
+    AGENTR --> GRAPH
+
+    S1 --> MONGO
+    S2 --> MONGO
+    S3 --> MONGO
+    S4 --> MONGO
+    S4 --> WSH
+    S5 --> CLOUD
+    S6 --> MONGO
+    S6 --> REDIS
+
+    GRAPH --> A1
+    A1 --> CREW
+    A1 --> RAG
+    A1 --> REG
+    A1 --> LLM
+    A1 --> S1
+    A1 --> S2
+    A1 --> S3
+    RAG --> FAISS
+    LLM --> GEM
+    A1 --> OSRM
+
+    BEAT --> CEL
+    CEL --> SIM
+    CEL --> GRAPH
+    CEL --> S5
+    SIM --> MONGO
+    CEL --> REDIS

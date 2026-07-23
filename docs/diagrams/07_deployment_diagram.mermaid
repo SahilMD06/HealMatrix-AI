@@ -1,0 +1,55 @@
+flowchart TB
+    subgraph User["User Devices"]
+        BR["Browser<br/>Desktop / Tablet / Mobile"]
+    end
+
+    subgraph Vercel["Vercel Edge Network"]
+        CDN["Static SPA bundle<br/>global CDN"]
+    end
+
+    subgraph Render["Render - Oregon"]
+        WEB["Web Service<br/>uvicorn + FastAPI<br/>Docker container"]
+        WRK["Background Worker<br/>Celery worker"]
+        BT["Cron Service<br/>Celery beat"]
+    end
+
+    subgraph Atlas["MongoDB Atlas"]
+        PRI[("Primary")]
+        SEC1[("Secondary")]
+        SEC2[("Secondary")]
+    end
+
+    subgraph Upstash["Upstash"]
+        RDS[("Redis<br/>broker + cache")]
+    end
+
+    subgraph SaaS["Third-Party SaaS"]
+        GEM["Google Gemini API"]
+        CLD["Cloudinary CDN"]
+        OSR["OSRM Routing"]
+    end
+
+    subgraph CI["GitHub"]
+        REPO["Repository"]
+        GHA["GitHub Actions<br/>lint - test - build"]
+    end
+
+    BR -- HTTPS --> CDN
+    BR -- "HTTPS /api/v1" --> WEB
+    BR -- "WSS /ws" --> WEB
+
+    WEB -- "mongodb+srv TLS" --> PRI
+    WRK --> PRI
+    BT --> RDS
+    WEB --> RDS
+    WRK --> RDS
+    PRI -.replication.-> SEC1
+    PRI -.replication.-> SEC2
+
+    WEB --> GEM
+    WEB --> OSR
+    WRK --> CLD
+
+    REPO --> GHA
+    GHA -- "deploy hook" --> WEB
+    GHA -- "deploy" --> CDN

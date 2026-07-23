@@ -1,0 +1,19 @@
+flowchart LR
+    E1([Hospital Staff<br/>6 roles])
+    E2([Hospital IoT / HIS<br/>meters, sensors, simulator])
+    E3([Ambulance Fleet])
+    E4([Google Gemini API])
+    E5([Regulatory Bodies<br/>WHO / CPCB corpus])
+
+    P0(((0<br/>HealMatrix AI<br/>Multi-Agent Platform)))
+
+    E1 -- "credentials, patient data, approvals" --> P0
+    P0 -- "dashboards, alerts, action plans, PDF reports" --> E1
+    E2 -- "energy, water, waste, occupancy telemetry" --> P0
+    P0 -- "optimisation setpoints, pickup schedules" --> E2
+    E3 -- "GPS position, status, call details" --> P0
+    P0 -- "route, destination hospital, priority" --> E3
+    P0 -- "structured reasoning prompts" --> E4
+    E4 -- "rationale, synthesis, summaries" --> P0
+    E5 -- "guidelines and rules corpus" --> P0
+    P0 -- "compliance reports, sustainability score" --> E5

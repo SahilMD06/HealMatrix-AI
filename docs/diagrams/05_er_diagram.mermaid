@@ -1,0 +1,199 @@
+erDiagram
+    HOSPITALS ||--o{ DEPARTMENTS : contains
+    HOSPITALS ||--o{ USERS : employs
+    HOSPITALS ||--o{ STAFF : rosters
+    HOSPITALS ||--o{ PATIENTS : registers
+    HOSPITALS ||--o{ AMBULANCES : operates
+    HOSPITALS ||--o{ INVENTORY : stocks
+    HOSPITALS ||--o{ ENERGY_LOGS : meters
+    HOSPITALS ||--o{ WATER_LOGS : meters
+    HOSPITALS ||--o{ WASTE_RECORDS : generates
+    HOSPITALS ||--o{ CARBON_REPORTS : reports
+    HOSPITALS ||--o{ NOTIFICATIONS : raises
+    HOSPITALS ||--o{ REPORTS : publishes
+    HOSPITALS ||--o{ AUDIT_LOGS : records
+    HOSPITALS ||--o{ AGENT_LOGS : logs
+    HOSPITALS ||--o{ SIMULATION_DATA : simulates
+
+    DEPARTMENTS ||--o{ ROOMS : has
+    DEPARTMENTS ||--o{ WASTE_RECORDS : produces
+    ROOMS ||--o{ BEDS : holds
+    PATIENTS ||--o{ ADMISSIONS : undergoes
+    ADMISSIONS }o--|| BEDS : occupies
+    ADMISSIONS }o--|| DEPARTMENTS : routed_to
+    ADMISSIONS }o--o| STAFF : attended_by
+    MEDICINES ||--o{ INVENTORY : batched_as
+    ADMISSIONS ||--o{ INVENTORY : consumes
+    USERS ||--o{ AUDIT_LOGS : performs
+    USERS ||--o{ REPORTS : requests
+    AGENT_LOGS ||--o{ NOTIFICATIONS : triggers
+    KNOWLEDGE_BASE ||--o{ AGENT_LOGS : grounds
+
+    HOSPITALS {
+        ObjectId _id PK
+        string code UK
+        string name
+        string type
+        geojson location
+        object capacity
+        array capabilities
+        float grid_emission_factor
+    }
+    USERS {
+        ObjectId _id PK
+        ObjectId hospital_id FK
+        string email UK
+        string password_hash
+        string role
+        ObjectId department_id FK
+        bool is_active
+    }
+    DEPARTMENTS {
+        ObjectId _id PK
+        ObjectId hospital_id FK
+        string code
+        string name
+        int floor
+        string hvac_zone
+    }
+    ROOMS {
+        ObjectId _id PK
+        ObjectId department_id FK
+        string room_number
+        string type
+        object coordinates
+    }
+    BEDS {
+        ObjectId _id PK
+        ObjectId room_id FK
+        string bed_number UK
+        string type
+        string status
+        ObjectId current_admission_id FK
+        array features
+    }
+    PATIENTS {
+        ObjectId _id PK
+        ObjectId hospital_id FK
+        string mrn UK
+        int age
+        string sex
+        array comorbidities
+    }
+    ADMISSIONS {
+        ObjectId _id PK
+        ObjectId patient_id FK
+        ObjectId bed_id FK
+        object vitals
+        object triage
+        string disease_category
+        string status
+        float predicted_los_days
+        datetime admitted_at
+    }
+    MEDICINES {
+        ObjectId _id PK
+        string sku UK
+        string name
+        string category
+        object storage
+        bool is_critical
+    }
+    INVENTORY {
+        ObjectId _id PK
+        ObjectId medicine_id FK
+        ObjectId hospital_id FK
+        string batch_number
+        int quantity
+        date expiry_date
+        string status
+    }
+    AMBULANCES {
+        ObjectId _id PK
+        string vehicle_number UK
+        string type
+        string status
+        geojson current_location
+        object active_call
+    }
+    ENERGY_LOGS {
+        ObjectId _id PK
+        datetime timestamp
+        string zone
+        float consumption_kwh
+        object source_mix
+        float emission_kg
+    }
+    WATER_LOGS {
+        ObjectId _id PK
+        datetime timestamp
+        float consumption_litres
+        float leak_probability
+    }
+    WASTE_RECORDS {
+        ObjectId _id PK
+        date date
+        string category
+        float weight_kg
+        string disposal_method
+        object pickup
+    }
+    CARBON_REPORTS {
+        ObjectId _id PK
+        object period
+        object scope1_kg
+        object scope2_kg
+        object scope3_kg
+        object sustainability_score
+    }
+    AGENT_LOGS {
+        ObjectId _id PK
+        uuid run_id
+        string agent_name
+        object output
+        string rationale
+        bool used_fallback
+        int duration_ms
+    }
+    NOTIFICATIONS {
+        ObjectId _id PK
+        string type
+        string severity
+        array target_roles
+        datetime expires_at
+    }
+    REPORTS {
+        ObjectId _id PK
+        string type
+        object period
+        string status
+        string file_url
+    }
+    AUDIT_LOGS {
+        ObjectId _id PK
+        ObjectId user_id FK
+        string action
+        object resource
+        object changes
+    }
+    KNOWLEDGE_BASE {
+        ObjectId _id PK
+        string chunk_id UK
+        string category
+        string content
+        int faiss_index_position
+    }
+    SIMULATION_DATA {
+        ObjectId _id PK
+        int tick
+        string stream
+        object payload
+        int seed
+    }
+    STAFF {
+        ObjectId _id PK
+        string employee_code UK
+        ObjectId department_id FK
+        string shift
+        bool on_duty
+    }

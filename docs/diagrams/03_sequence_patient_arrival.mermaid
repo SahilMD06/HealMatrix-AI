@@ -1,0 +1,69 @@
+sequenceDiagram
+    autonumber
+    actor Nurse
+    participant UI as React SPA
+    participant API as FastAPI
+    participant SVC as AdmissionService
+    participant G as LangGraph Orchestrator
+    participant T as Triage Agent
+    participant D as Disease Forecast Agent
+    participant B as Bed Allocation Agent
+    participant P as Parallel Agents
+    participant C as Carbon Agent
+    participant E as Executive Agent
+    participant DB as MongoDB
+    participant WS as WebSocket Hub
+
+    Nurse->>UI: Enter arrival + vitals
+    UI->>API: POST /api/v1/admissions/arrival
+    API->>SVC: create_arrival(payload)
+    SVC->>DB: insert admissions (status=triaged)
+    SVC->>G: invoke(trigger=patient_arrival)
+
+    G->>DB: read hospital snapshot
+    DB-->>G: snapshot
+
+    G->>T: analyse(state)
+    T->>T: XGBoost ESI + red-flag rules
+    T->>T: Gemini rationale
+    T-->>G: TriageResult(esi, dept, rationale)
+
+    G->>D: analyse(state)
+    D-->>G: DiseaseForecastResult(14d admissions, ICU demand)
+
+    G->>B: analyse(state)
+    B->>B: score candidate beds, predict LOS
+    alt ICU occupancy >= 90%
+        B-->>G: escalate ICU overflow
+    else capacity available
+        B-->>G: BedAllocationResult(bed_id, LOS)
+    end
+
+    par Parallel fan-out
+        G->>P: medicine.analyse
+    and
+        G->>P: energy.analyse
+    and
+        G->>P: water.analyse
+    and
+        G->>P: waste.analyse
+    and
+        G->>P: dispatch.analyse
+    end
+    P-->>G: five AgentResults
+
+    G->>C: analyse(state)
+    C-->>G: CarbonResult(scopes, score)
+
+    G->>G: conflict_resolver
+    G->>E: analyse(state)
+    E->>E: CrewAI executive crew
+    E-->>G: ExecutiveResult(summary, action plan)
+
+    G->>DB: write agent_logs, notifications, reservations
+    G-->>SVC: HealMatrixState
+    SVC-->>API: AdmissionResponse
+    API-->>UI: 201 Created
+    G->>WS: publish notification
+    WS-->>UI: live alert
+    UI-->>Nurse: Bed 3B assigned, ESI 2, rationale shown

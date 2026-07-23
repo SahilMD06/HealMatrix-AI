@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * HealMatrix design tokens — dark-first.
+ * Every colour is declared once as HSL channels so Tailwind's semantic classes
+ * (bg-background, text-foreground, border-border) recolour automatically per theme.
+ */
+@layer base {
+  :root {
+    --background: 220 33% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 94%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 220 20% 94%;
+    --muted-foreground: 220 12% 46%;
+
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 350 84% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 18% 88%;
+    --input: 220 18% 88%;
+    --ring: 243 75% 59%;
+
+    --radius: 0.85rem;
+
+    --glass-bg: 255 255 255 / 0.7;
+    --glass-border: 255 255 255 / 0.6;
+    --sidebar: 0 0% 100%;
+  }
+
+  .dark {
+    /* Almost-black canvas with cool undertone (#09090B family). */
+    --background: 240 10% 4%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 24% 9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 24% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 243 80% 66%;
+    --primary-foreground: 240 10% 4%;
+
+    --secondary: 222 20% 15%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 222 18% 15%;
+    --muted-foreground: 217 12% 58%;
+
+    --accent: 199 89% 55%;
+    --accent-foreground: 240 10% 4%;
+
+    --destructive: 350 80% 58%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 222 20% 16%;
+    --input: 222 20% 18%;
+    --ring: 243 80% 66%;
+
+    --glass-bg: 17 24 39 / 0.55;
+    --glass-border: 148 163 184 / 0.1;
+    --sidebar: 240 12% 5%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    background-image:
+      radial-gradient(ellipse 90% 55% at 50% -10%, hsl(var(--primary) / 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, hsl(199 89% 48% / 0.06), transparent);
+    background-attachment: fixed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Glassmorphic surface. */
+  .glass {
+    background: rgb(var(--glass-bg));
+    border: 1px solid rgb(var(--glass-border));
+    @apply backdrop-blur-xl shadow-glass;
+  }
+
+  /* Premium card: subtle top sheen, lifts and glows on hover. */
+  .premium-card {
+    @apply relative overflow-hidden rounded-lg border border-border bg-card shadow-elevated transition-all duration-300;
+  }
+  .premium-card::before {
+    content: '';
+    @apply pointer-events-none absolute inset-x-0 top-0 h-px;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.5), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .premium-card:hover {
+    @apply -translate-y-0.5 border-primary/30;
+    box-shadow:
+      0 1px 2px rgba(2, 6, 23, 0.4),
+      0 18px 44px -12px hsl(var(--primary) / 0.28);
+  }
+  .premium-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Back-compat alias: existing markup uses .glass-card; route it to the
+     premium card look so older components inherit the redesign for free. */
+  .glass-card {
+    @apply premium-card p-5;
+  }
+
+  /* Gradient-bordered card for hero / highlighted surfaces. */
+  .gradient-border {
+    @apply relative rounded-lg bg-card;
+    background-clip: padding-box;
+  }
+  .gradient-border::after {
+    content: '';
+    @apply pointer-events-none absolute inset-0 -z-10 rounded-lg;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.6), transparent 40%, hsl(199 89% 48% / 0.5));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  /* Grid backdrop for hero sections. */
+  .grid-backdrop {
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.6) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.6) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 55%, transparent 100%);
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-muted/60;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer;
+    background-image: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.08), transparent);
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Status dot with a soft pulsing halo. */
+  .status-dot {
+    @apply relative inline-flex h-2 w-2 rounded-full;
+  }
+  .status-dot::after {
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    background: inherit;
+    animation: pulse-ring 1.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-indigo via-brand-blue to-brand-cyan bg-clip-text text-transparent;
+  }
+  .bg-animated-gradient {
+    background-size: 200% 200%;
+    @apply animate-gradient-pan;
+  }
+  .scrollbar-slim::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-slim::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-muted-foreground/25;
+  }
+  .scrollbar-slim::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+  .scrollbar-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  /* Tabular figures for metrics so digits don't jitter as they animate. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

@@ -1,0 +1,28 @@
+# ============================================================================
+# HealMatrix AI - agent and RAG stack (Phase 3)
+#
+# Layered on top of the core runtime. Install both:
+#     pip install -r requirements.txt -r requirements-ai.txt
+#
+# Size warning: sentence-transformers depends on PyTorch. Expect ~1.5 GB
+# installed and a slow first build. Not suitable for a 512 MB free-tier host;
+# for that deployment the RAG retriever falls back to MongoDB text search.
+# ============================================================================
+
+-r requirements.txt
+
+# ---------- Orchestration ----------
+langgraph==0.2.60
+langchain==0.3.13
+langchain-core==0.3.28
+langchain-community==0.3.13
+langchain-text-splitters==0.3.4
+crewai==0.86.0
+
+# ---------- LLM provider ----------
+langchain-google-genai==2.0.7
+google-generativeai==0.8.3
+
+# ---------- Embeddings & vector store ----------
+sentence-transformers==3.3.1
+faiss-cpu==1.9.0.post1

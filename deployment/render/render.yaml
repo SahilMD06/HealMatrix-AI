@@ -1,0 +1,144 @@
+# Render Blueprint for HealMatrix AI's backend services.
+#
+# Deploys three services from the same Docker image (docker/backend.Dockerfile):
+# the API (web, health-checked), the Celery worker (background job execution)
+# and Celery beat (the scheduler that fires the hourly agent cycle — see
+# app/core/celery_app.py's beat_schedule). MongoDB and Redis are NOT declared
+# here: this project targets MongoDB Atlas and Upstash Redis (managed,
+# external services — see docs/02_system_architecture.md section 7), configured
+# purely through environment variables rather than Render-managed databases,
+# so the same MONGODB_URI/REDIS_URL work identically in Docker Compose locally
+# and in this deployment.
+#
+# Usage: connect this repo in the Render dashboard and point it at this file
+# ("New +" -> "Blueprint"), or `render blueprint launch` from the Render CLI.
+# Every value below marked `sync: false` is a secret Render will prompt for
+# once and never store in this file or in git.
+
+services:
+  - type: web
+    name: healmatrix-api
+    runtime: docker
+    dockerfilePath: ../../docker/backend.Dockerfile
+    dockerContext: ../../backend
+    dockerBuildArgs:
+      INSTALL_AI: "true" # Phase 3's real agent stack (LangGraph/CrewAI/RAG) ships in production.
+    plan: standard
+    region: singapore # nearest Render region to the primary deployment (India-focused rollout)
+    healthCheckPath: /health/ready
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: API_V1_PREFIX
+        value: /api/v1
+      - key: BACKEND_CORS_ORIGINS
+        sync: false # comma-separated; set to the deployed Vercel URL(s)
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB_NAME
+        value: healmatrix
+      - key: JWT_SECRET_KEY
+        generateValue: true # Render generates and stores a random 256-bit value
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: "7"
+      - key: REDIS_URL
+        sync: false
+      - key: CELERY_BROKER_URL
+        sync: false
+      - key: CELERY_RESULT_BACKEND
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: GEMINI_TEMPERATURE
+        value: "0.2"
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: EMBEDDING_MODEL
+        value: sentence-transformers/all-MiniLM-L6-v2
+      - key: FAISS_INDEX_PATH
+        value: app/rag/index
+      - key: RAG_TOP_K
+        value: "5"
+      - key: SIMULATOR_ENABLED
+        value: "false" # the synthetic simulator is a demo/dev feature, off by default in production
+      - key: SIMULATOR_TICK_SECONDS
+        value: "30"
+      - key: SIMULATOR_SEED
+        value: "42"
+
+  - type: worker
+    name: healmatrix-worker
+    runtime: docker
+    dockerfilePath: ../../docker/backend.Dockerfile
+    dockerContext: ../../backend
+    dockerBuildArgs:
+      INSTALL_AI: "true"
+    dockerCommand: celery -A app.core.celery_app.celery_app worker --loglevel=info --concurrency=2
+    plan: standard
+    region: singapore
+    autoDeploy: true
+    envVars:
+      - fromService:
+          name: healmatrix-api
+          type: web
+          envVarKey: MONGODB_URI
+      - fromService:
+          name: healmatrix-api
+          type: web
+          envVarKey: REDIS_URL
+      - fromService:
+          name: healmatrix-api
+          type: web
+          envVarKey: CELERY_BROKER_URL
+      - fromService:
+          name: healmatrix-api
+          type: web
+          envVarKey: CELERY_RESULT_BACKEND
+      - fromService:
+          name: healmatrix-api
+          type: web
+          envVarKey: GOOGLE_API_KEY
+      - fromService:
+          name: healmatrix-api
+          type: web
+          envVarKey: GEMINI_MODEL
+
+  - type: worker
+    name: healmatrix-beat
+    runtime: docker
+    dockerfilePath: ../../docker/backend.Dockerfile
+    dockerContext: ../../backend
+    dockerBuildArgs:
+      INSTALL_AI: "true"
+    dockerCommand: celery -A app.core.celery_app.celery_app beat --loglevel=info
+    plan: starter # beat only schedules ticks; it does not need worker-grade resources
+    region: singapore
+    autoDeploy: true
+    envVars:
+      - fromService:
+          name: healmatrix-api
+          type: web
+          envVarKey: MONGODB_URI
+      - fromService:
+          name: healmatrix-api
+          type: web
+          envVarKey: REDIS_URL
+      - fromService:
+          name: healmatrix-api
+          type: web
+          envVarKey: CELERY_BROKER_URL
+      - fromService:
+          name: healmatrix-api
+          type: web
+          envVarKey: CELERY_RESULT_BACKEND

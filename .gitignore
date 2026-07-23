@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+.env.local
+*.env
+!.env.example
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+
+# ML artefacts & vector store
+backend/app/ml/artifacts/*.pkl
+backend/app/ml/artifacts/*.json
+backend/app/rag/index/
+!backend/app/ml/artifacts/.gitkeep
+
+# Generated reports
+backend/generated_reports/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

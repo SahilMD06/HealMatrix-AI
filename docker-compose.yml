@@ -1,0 +1,125 @@
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: healmatrix-mongo
+    restart: unless-stopped
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_DATABASE: healmatrix
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: healmatrix-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+      args:
+        INSTALL_AI: "${INSTALL_AI:-true}"
+    container_name: healmatrix-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - ./scripts:/scripts
+      - ./knowledge_base:/knowledge_base:ro
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+      args:
+        INSTALL_AI: "${INSTALL_AI:-true}"
+    container_name: healmatrix-worker
+    restart: unless-stopped
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      - backend
+      - redis
+    volumes:
+      - ./backend:/app
+      - ./scripts:/scripts
+
+  beat:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+      args:
+        INSTALL_AI: "${INSTALL_AI:-true}"
+    container_name: healmatrix-beat
+    restart: unless-stopped
+    command: celery -A app.core.celery_app.celery_app beat --loglevel=info
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      # Without this, Celery's result backend falls back to localhost:6379, and
+      # beat cannot reach it inside the container network — the "Connection to
+      # Redis lost" crash loop.
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      - worker
+    volumes:
+      - ./backend:/app
+      - ./scripts:/scripts
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend.Dockerfile
+      target: dev
+    container_name: healmatrix-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000/api/v1
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  mongo_data:
+  redis_data:

@@ -1,0 +1,71 @@
+flowchart LR
+    subgraph Actors
+        AD([Admin])
+        DR([Doctor])
+        NR([Nurse])
+        PH([Pharmacist])
+        MG([Hospital Manager])
+        SO([Sustainability Officer])
+        AG([AI Agent Network])
+    end
+
+    subgraph HealMatrix["HealMatrix AI Platform"]
+        UC1(Manage Users and Roles)
+        UC2(Configure Hospital Network)
+        UC3(View Audit Trail)
+        UC4(Register Patient Arrival)
+        UC5(Run AI Triage)
+        UC6(Allocate Bed)
+        UC7(Predict Discharge)
+        UC8(Monitor Inventory)
+        UC9(Approve Inter-Hospital Transfer)
+        UC10(Track Energy and Water)
+        UC11(Schedule Waste Pickup)
+        UC12(View Carbon and SDG Score)
+        UC13(Dispatch Ambulance)
+        UC14(View Digital Twin)
+        UC15(Query Knowledge Assistant)
+        UC16(Generate PDF Report)
+        UC17(Acknowledge Notification)
+        UC18(Run Executive Cycle)
+        UC19(Inject Simulation Scenario)
+    end
+
+    AD --> UC1
+    AD --> UC2
+    AD --> UC3
+    AD --> UC19
+    DR --> UC4
+    DR --> UC5
+    DR --> UC7
+    DR --> UC14
+    DR --> UC15
+    NR --> UC4
+    NR --> UC6
+    NR --> UC11
+    NR --> UC17
+    PH --> UC8
+    PH --> UC9
+    PH --> UC16
+    MG --> UC14
+    MG --> UC16
+    MG --> UC18
+    SO --> UC10
+    SO --> UC11
+    SO --> UC12
+    SO --> UC16
+    NR --> UC13
+
+    AG --> UC5
+    AG --> UC6
+    AG --> UC7
+    AG --> UC8
+    AG --> UC10
+    AG --> UC12
+    AG --> UC13
+    AG --> UC18
+
+    UC5 -.include.-> UC15
+    UC6 -.include.-> UC7
+    UC9 -.extend.-> UC8
+    UC18 -.include.-> UC12

@@ -1,0 +1,132 @@
+# Self-hosted / on-premise production stack.
+#
+# This is the second of two supported deployment paths (see
+# docs/02_system_architecture.md section 7): the cloud path is Render (API,
+# worker, beat) + Vercel (frontend) + MongoDB Atlas + Upstash Redis, configured
+# in deployment/render/render.yaml and deployment/vercel/vercel.json. This file
+# is for a hospital that wants everything running on its own infrastructure —
+# a real option for data-residency-sensitive deployments, not a fallback.
+#
+# Differences from docker-compose.yml (the dev file):
+#   - No bind mounts. Code is baked into the image at build time, so a
+#     container restart never picks up an uncommitted local edit.
+#   - The frontend builds its `prod` stage (nginx serving the static build),
+#     not the `dev` stage (Vite's dev server).
+#   - `restart: always` rather than `unless-stopped` — a production host
+#     should always try to recover a crashed container, including after a
+#     full machine reboot.
+#   - `INSTALL_AI` defaults to true unconditionally; there is no dev/prod
+#     trade-off to make here, since this file exists specifically to run the
+#     full agent stack somewhere real.
+#
+# Usage:
+#   cp .env.example .env   # fill in every value, especially JWT_SECRET_KEY and GOOGLE_API_KEY
+#   docker compose -f docker-compose.prod.yml up --build -d
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: healmatrix-mongo
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: healmatrix
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: healmatrix-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+      args:
+        INSTALL_AI: "true"
+    container_name: healmatrix-backend
+    restart: always
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      ENVIRONMENT: production
+      SIMULATOR_ENABLED: "false"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+      args:
+        INSTALL_AI: "true"
+    container_name: healmatrix-worker
+    restart: always
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=info --concurrency=2
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      ENVIRONMENT: production
+    depends_on:
+      - backend
+      - redis
+
+  beat:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+      args:
+        INSTALL_AI: "true"
+    container_name: healmatrix-beat
+    restart: always
+    command: celery -A app.core.celery_app.celery_app beat --loglevel=info
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      ENVIRONMENT: production
+    depends_on:
+      - worker
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend.Dockerfile
+      target: prod
+    container_name: healmatrix-frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+  redis_data:

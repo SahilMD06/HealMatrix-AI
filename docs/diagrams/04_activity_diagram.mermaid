@@ -1,0 +1,43 @@
+flowchart TD
+    S([Start: Patient arrives]) --> A[Capture demographics and vitals]
+    A --> B{Vitals complete?}
+    B -- No --> A
+    B -- Yes --> C[Invoke Triage Agent]
+    C --> D{Red-flag vitals present?}
+    D -- Yes --> E[Force ESI 1 - Resuscitation]
+    D -- No --> F[XGBoost ESI classification]
+    E --> G[Generate clinical rationale]
+    F --> G
+    G --> H[Invoke Disease Forecast Agent]
+    H --> I[Invoke Bed Allocation Agent]
+    I --> J{Suitable bed available?}
+    J -- Yes --> K[Reserve bed for 30 minutes]
+    J -- No --> L{ICU occupancy >= 90%?}
+    L -- Yes --> M[Trigger ICU overflow protocol]
+    L -- No --> N[Queue with expected wait time]
+    M --> O[Notify manager and on-call]
+    N --> O
+    K --> P[Confirm admission]
+    O --> P
+    P --> Q[Parallel agent fan-out]
+    Q --> Q1[Medicine demand check]
+    Q --> Q2[Energy load impact]
+    Q --> Q3[Water demand impact]
+    Q --> Q4[Waste generation estimate]
+    Q --> Q5[Ambulance fleet state]
+    Q1 --> R[Carbon Intelligence aggregation]
+    Q2 --> R
+    Q3 --> R
+    Q4 --> R
+    Q5 --> R
+    R --> T{Conflicting recommendations?}
+    T -- Yes --> U[Conflict resolver: safety > compliance > cost > sustainability]
+    T -- No --> V[Executive Decision Agent]
+    U --> V
+    V --> W[Persist agent logs and emit notifications]
+    W --> X[Update dashboards and digital twin]
+    X --> Y{Human approves action plan?}
+    Y -- Yes --> Z[Execute approved actions]
+    Y -- No --> AA[Record override with reason in audit log]
+    Z --> END([End])
+    AA --> END

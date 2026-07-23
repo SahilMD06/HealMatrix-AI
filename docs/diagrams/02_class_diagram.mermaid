@@ -1,0 +1,118 @@
+classDiagram
+    class BaseAgent {
+        <<abstract>>
+        +str name
+        +str version
+        +analyse(state) AgentResult
+        +fallback(state) AgentResult
+        +run(state) AgentResult
+        -log_run(result) void
+    }
+
+    class PatientTriageAgent {
+        -ModelRegistry registry
+        -GeminiClient llm
+        +analyse(state) TriageResult
+        +fallback(state) TriageResult
+        -apply_red_flag_rules(vitals) list
+    }
+    class DiseaseForecastAgent {
+        +analyse(state) DiseaseForecastResult
+        -detect_outbreak(series) bool
+    }
+    class BedAllocationAgent {
+        -BedService beds
+        +analyse(state) BedAllocationResult
+        -score_candidates(beds, ctx) list
+        -predict_los(admission) float
+    }
+    class MedicineIntelligenceAgent {
+        +analyse(state) MedicineResult
+        -forecast_demand(sku) Forecast
+        -propose_transfers(network) list
+    }
+    class EnergyOptimizationAgent {
+        +analyse(state) EnergyResult
+        -optimise_hvac(zones) list
+    }
+    class WaterConservationAgent {
+        +analyse(state) WaterResult
+        -detect_leak(series) LeakSignal
+    }
+    class BiomedicalWasteAgent {
+        -RagRetriever rag
+        +analyse(state) WasteResult
+        -classify(item) WasteCategory
+    }
+    class CarbonIntelligenceAgent {
+        -EmissionFactors factors
+        +analyse(state) CarbonResult
+        -sustainability_score(m) Score
+    }
+    class AmbulanceDispatchAgent {
+        -RoutingClient osrm
+        +analyse(state) DispatchResult
+        -nearest_suitable(call) Hospital
+    }
+    class ExecutiveDecisionAgent {
+        -Crew executive_crew
+        +analyse(state) ExecutiveResult
+        -resolve_conflicts(state) list
+    }
+
+    BaseAgent <|-- PatientTriageAgent
+    BaseAgent <|-- DiseaseForecastAgent
+    BaseAgent <|-- BedAllocationAgent
+    BaseAgent <|-- MedicineIntelligenceAgent
+    BaseAgent <|-- EnergyOptimizationAgent
+    BaseAgent <|-- WaterConservationAgent
+    BaseAgent <|-- BiomedicalWasteAgent
+    BaseAgent <|-- CarbonIntelligenceAgent
+    BaseAgent <|-- AmbulanceDispatchAgent
+    BaseAgent <|-- ExecutiveDecisionAgent
+
+    class HealMatrixGraph {
+        -StateGraph graph
+        +build() CompiledGraph
+        +invoke(trigger, hospital_id) HealMatrixState
+    }
+    HealMatrixGraph o-- BaseAgent
+
+    class BaseRepository~T~ {
+        +find_one(filter) T
+        +find_many(filter, skip, limit) list
+        +insert(doc) T
+        +update(id, patch) T
+        +aggregate(pipeline) list
+    }
+    class BedService
+    class InventoryService
+    class CarbonService
+
+    BedService --> BaseRepository
+    InventoryService --> BaseRepository
+    CarbonService --> BaseRepository
+    BedAllocationAgent --> BedService
+    MedicineIntelligenceAgent --> InventoryService
+    CarbonIntelligenceAgent --> CarbonService
+
+    class Hospital {
+        +ObjectId id
+        +str code
+        +GeoJSON location
+        +list capabilities
+    }
+    class Admission {
+        +ObjectId id
+        +Vitals vitals
+        +Triage triage
+        +str status
+    }
+    class Bed {
+        +str bed_number
+        +str status
+        +list features
+    }
+    Hospital "1" --> "*" Admission
+    Hospital "1" --> "*" Bed
+    Admission "1" --> "0..1" Bed

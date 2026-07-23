@@ -1,0 +1,74 @@
+flowchart TB
+    E1([Hospital Staff])
+    E2([Telemetry / Simulator])
+    E3([Ambulance Fleet])
+    E4([Gemini API])
+
+    P1[1.0<br/>Authentication and<br/>Access Control]
+    P2[2.0<br/>Patient Intake<br/>and Triage]
+    P3[3.0<br/>Resource Allocation<br/>beds, staff, medicine]
+    P4[4.0<br/>Sustainability Monitoring<br/>energy, water, waste]
+    P5[5.0<br/>Emergency Dispatch]
+    P6[6.0<br/>Predictive Analytics<br/>and Forecasting]
+    P7[7.0<br/>Executive Synthesis<br/>and Reporting]
+    P8[8.0<br/>Notification Engine]
+
+    D1[(D1 users / audit_logs)]
+    D2[(D2 patients / admissions)]
+    D3[(D3 beds / rooms / departments)]
+    D4[(D4 medicines / inventory)]
+    D5[(D5 energy / water / waste logs)]
+    D6[(D6 carbon_reports)]
+    D7[(D7 agent_logs)]
+    D8[(D8 notifications / reports)]
+    D9[(D9 knowledge_base / FAISS)]
+    D10[(D10 simulation_data)]
+
+    E1 -- login --> P1
+    P1 <--> D1
+    P1 -- session token --> E1
+
+    E1 -- arrival + vitals --> P2
+    P2 <--> D2
+    P2 -- prompt --> E4
+    E4 -- rationale --> P2
+    P2 -- ESI + department --> P3
+    P2 --> D7
+
+    P3 <--> D3
+    P3 <--> D4
+    P3 -- allocation decision --> E1
+    P3 --> D7
+    P3 -- shortage signal --> P8
+
+    E2 -- meter readings --> P4
+    P4 <--> D5
+    P4 <--> D9
+    P4 -- emissions input --> P7
+    P4 -- anomaly --> P8
+    P4 --> D6
+    P4 --> D7
+
+    E3 -- GPS + call --> P5
+    P5 <--> D3
+    P5 -- route + destination --> E3
+    P5 -- inbound patient ETA --> P2
+    P5 --> D7
+
+    D2 -- historical admissions --> P6
+    D5 -- historical consumption --> P6
+    D10 -- synthetic history --> P6
+    P6 -- forecasts --> P3
+    P6 -- forecasts --> P4
+    P6 -- outbreak warning --> P8
+    P6 --> D7
+
+    P3 --> P7
+    P6 --> P7
+    P7 <--> D6
+    P7 --> D8
+    P7 --> D7
+    P7 -- executive summary + PDF --> E1
+
+    P8 <--> D8
+    P8 -- realtime alerts --> E1

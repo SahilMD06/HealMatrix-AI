@@ -1,0 +1,31 @@
+[project]
+name = "healmatrix-backend"
+version = "1.0.0"
+description = "HealMatrix AI - Multi-Agent Sustainable Healthcare Intelligence Platform (backend)"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [".venv", "__pycache__", "app/ml/artifacts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "C4", "SIM", "ASYNC"]
+ignore = [
+    "B008",   # FastAPI's Depends() in defaults is the documented idiom
+    "E501",   # line length is handled by the formatter
+    "UP017",  # datetime.UTC is 3.11+; timezone.utc keeps the suite runnable on 3.10 tooling
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "unit: fast isolated tests",
+    "integration: tests requiring MongoDB or Redis",
+    "api: end-to-end HTTP tests",
+]
