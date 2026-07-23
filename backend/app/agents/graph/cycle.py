@@ -74,7 +74,8 @@ async def build_scheduled_cycle_state(hospital_id: str, run_id: str) -> dict[str
         {"timestamp": {"$gte": since_hourly}}, limit=24 * 7, sort_by="timestamp", sort_desc=False
     )
 
-    since_daily = (utc_now() - timedelta(days=14)).date()
+    # Stored as an ISO date string, not a native date — see sustainability_service.py.
+    since_daily = (utc_now() - timedelta(days=14)).date().isoformat()
     waste_rows = await waste_repo.find_many(
         {"date": {"$gte": since_daily}}, limit=200, sort_by="date", sort_desc=False
     )

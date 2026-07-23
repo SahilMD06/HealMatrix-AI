@@ -19,7 +19,10 @@ class InventoryService:
         self.medicines = medicines
 
     async def expiry_alerts(self, within_days: int = EXPIRY_ALERT_DAYS[0]) -> list[dict]:
-        cutoff = utc_now().date() + timedelta(days=within_days)
+        # Stored as an ISO date string (see analytics.py's identical convention and
+        # sustainability_service.py) — MongoDB's driver cannot encode a bare
+        # datetime.date into a query filter, so this must match the stored string.
+        cutoff = (utc_now().date() + timedelta(days=within_days)).isoformat()
         rows = await self.inventory.expiring_within(cutoff)
         return [serialise(row) for row in rows]
 

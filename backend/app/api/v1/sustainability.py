@@ -115,7 +115,8 @@ async def waste_history(
     _user: CurrentUser,
     days: Annotated[int, Query(ge=1, le=90)] = 14,
 ) -> list[dict]:
-    since = (utc_now() - timedelta(days=days)).date()
+    # Stored as an ISO date string, not a native date — see sustainability_service.py.
+    since = (utc_now() - timedelta(days=days)).date().isoformat()
     rows = await waste.find_many(
         {"date": {"$gte": since}}, limit=500, sort_by="date", sort_desc=False
     )

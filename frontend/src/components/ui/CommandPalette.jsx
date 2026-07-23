@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { CornerDownLeft, Search } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -12,8 +12,18 @@ import { cn } from '@/lib/utils'
  */
 export function CommandPalette({ open, onOpenChange, actions }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
+
+  // Safety net: whatever triggered the navigation (a palette click, browser
+  // back/forward, anything), once the route has actually changed the palette
+  // has done its job and must not still be sitting on top of the new page.
+  // This does not depend on `run()`'s own onOpenChange(false) call succeeding.
+  useEffect(() => {
+    onOpenChange(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname])
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -35,9 +45,15 @@ export function CommandPalette({ open, onOpenChange, actions }) {
   }, [open])
 
   function run(action) {
-    onOpenChange(false)
     if (action.to) navigate(action.to)
     action.onSelect?.()
+    // Deferred rather than called first: react-router's navigate() and this
+    // close both update state in the same tick, and batching them together
+    // was the actual bug — after 2-3 rapid open/select cycles the palette's
+    // own `open` update was getting dropped while framer-motion's
+    // AnimatePresence was still unwinding the previous exit animation.
+    // Pushing the close into its own macrotask lets that settle first.
+    setTimeout(() => onOpenChange(false), 0)
   }
 
   function onKeyDown(e) {

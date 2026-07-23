@@ -68,7 +68,11 @@ class SustainabilityService:
 
         waste_rows = await self.waste_records.aggregate(
             [
-                {"$match": {"date": {"$gte": since.date()}}},
+                # Stored as an ISO date string (see seed_database.py's backfill_history and
+                # analytics.py's identical convention) — MongoDB's driver cannot encode a
+                # bare datetime.date into a query filter (bson.errors.InvalidDocument), so
+                # this must match the stored representation exactly, not a native date.
+                {"$match": {"date": {"$gte": since.date().isoformat()}}},
                 {
                     "$group": {
                         "_id": {"category": "$category", "method": "$disposal_method"},
