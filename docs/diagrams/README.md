@@ -21,7 +21,7 @@ reproducible. Nothing here is a screenshot.
 npm install -g @mermaid-js/mermaid-cli
 cd docs/diagrams
 for f in *.mermaid; do
-  mmdc -i "$f" -o "../../project_report/figures/${f%.mermaid}.png" -w 2400 -b white
+  mmdc -i "$f" -o "figures/${f%.mermaid}.png" -w 2400 -b white
 done
 ```
 

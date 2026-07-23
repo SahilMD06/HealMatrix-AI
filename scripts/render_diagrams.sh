@@ -5,7 +5,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC="$ROOT/docs/diagrams"
-OUT="$ROOT/project_report/figures"
+OUT="$SRC/figures"
 
 mkdir -p "$OUT"
 
