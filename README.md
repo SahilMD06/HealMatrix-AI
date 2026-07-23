@@ -87,7 +87,7 @@ HealMatrix-AI/
 ├── docs/               SRS, architecture, DB design, API spec, diagrams, manuals
 ├── deployment/         Render + Vercel configuration
 ├── docker/             Dockerfiles
-├── ppt/ lean_canvas/ project_report/ poster/ concept_note/ demo_script/
+├── scripts/            Seed data, post-deploy smoke test
 └── .github/workflows/  CI/CD pipelines
 ```
 
@@ -187,7 +187,6 @@ python scripts/smoke_test.py --frontend-url http://localhost
 | 5 | Analytics, dashboards, reports, notifications | ✅ Complete |
 | 6 | Testing, Docker, CI/CD, deployment | ✅ Complete |
 | 7 | Documentation suite | ✅ Complete |
-| 8 | PPT, Lean Canvas, concept note, poster, demo script | ✅ Complete |
 
 ## 12. License
 
