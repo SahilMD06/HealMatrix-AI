@@ -23,9 +23,9 @@ import json
 import os
 from typing import Any
 
-from app.agents.base import AgentResult, BaseAgent, emit
-from app.agents.state import HealMatrixState, messages_for, result_of
+from app.agents.base import AgentResult, BaseAgent
 from app.agents.llm import llm_ready
+from app.agents.state import HealMatrixState, messages_for, result_of
 from app.core.config import settings
 from app.core.constants import AgentName
 

@@ -23,10 +23,10 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from app.agents.state import HealMatrixState
 from app.core.config import settings
 from app.core.logging_config import get_logger
 from app.models.intelligence import AgentMessage
-from app.agents.state import HealMatrixState
 
 logger = get_logger(__name__)
 
@@ -83,7 +83,7 @@ class BaseAgent(ABC):
                 )
                 result.duration_ms = self._elapsed_ms(started)
                 return result
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning(
                     "agent.analyse_timeout", agent=self.name, attempt=attempt + 1
                 )

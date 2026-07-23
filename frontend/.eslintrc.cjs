@@ -21,4 +21,13 @@ module.exports = {
     'react/prop-types': 'off',
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
   },
+  overrides: [
+    {
+      // These run under Node during the build, not in the browser — the base
+      // config's `env: { browser: true }` doesn't know `process`/`require` are
+      // real globals here, not typos.
+      files: ['vite.config.js', 'tailwind.config.js'],
+      env: { node: true },
+    },
+  ],
 }

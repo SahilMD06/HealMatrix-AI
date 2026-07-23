@@ -18,7 +18,7 @@ import numpy as np
 
 from app.core.exceptions import ModelNotAvailableError
 from app.core.logging_config import get_logger
-from app.ml.features import TRIAGE_FEATURE_COLUMNS, triage_features
+from app.ml.features import triage_features
 from app.models.clinical import Vitals
 
 logger = get_logger(__name__)

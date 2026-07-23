@@ -18,7 +18,6 @@ provider times out: estimate from geometry rather than block a 999 call.
 from __future__ import annotations
 
 import math
-from typing import Any
 
 import httpx
 

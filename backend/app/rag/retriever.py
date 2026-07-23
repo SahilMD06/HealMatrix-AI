@@ -65,7 +65,7 @@ async def _semantic_search(query: str, top_k: int, category: str | None) -> list
     repo = KnowledgeChunkRepository()
     rows = await repo.by_faiss_positions([int(p) for p in positions[0] if p >= 0])
 
-    score_by_position = {int(p): float(s) for p, s in zip(positions[0], scores[0])}
+    score_by_position = {int(p): float(s) for p, s in zip(positions[0], scores[0], strict=False)}
     results = []
     for row in rows:
         if category and row.get("category") != category:

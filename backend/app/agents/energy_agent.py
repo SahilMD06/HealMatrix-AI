@@ -22,7 +22,6 @@ for that zone this cycle.
 from __future__ import annotations
 
 import statistics
-from typing import Any
 
 from app.agents.base import AgentResult, BaseAgent, emit
 from app.agents.state import HealMatrixState

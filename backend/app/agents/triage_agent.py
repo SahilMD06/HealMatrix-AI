@@ -25,15 +25,19 @@ from app.agents.base import AgentResult, BaseAgent, emit
 from app.agents.llm import llm_ready, structured_call
 from app.agents.state import HealMatrixState
 from app.core.config import settings
-from app.core.constants import AgentName, TRIAGE_LABELS, TRIAGE_TARGET_MINUTES
+from app.core.constants import TRIAGE_LABELS, TRIAGE_TARGET_MINUTES, AgentName
 from app.core.exceptions import ModelNotAvailableError
 from app.ml import inference
 from app.models.clinical import Vitals
 from app.services.triage_rules import (
     build_rationale as rule_engine_rationale,
+)
+from app.services.triage_rules import (
     detect_red_flags,
     score_severity,
     suggest_department,
+)
+from app.services.triage_rules import (
     triage as rule_engine_triage,
 )
 
