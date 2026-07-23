@@ -32,7 +32,12 @@ describe('InventoryDashboard', () => {
 
     renderPage(<InventoryDashboard />)
 
-    await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument())
+    // StatCard mounts at value=0 before the fetch resolves, then eases to the
+    // real value over ~700ms (useAnimatedCounter) once data arrives — that's a
+    // genuine animation, not test flakiness, so give waitFor enough headroom
+    // to observe it land rather than tightening the race against the default
+    // 1000ms timeout.
+    await waitFor(() => expect(screen.getByText('3')).toBeInTheDocument(), { timeout: 2000 })
     expect(screen.getByText('2')).toBeInTheDocument()
     expect(api.get).toHaveBeenCalledWith('/analytics/medicine', { params: undefined })
   })
