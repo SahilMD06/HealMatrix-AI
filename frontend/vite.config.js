@@ -13,6 +13,14 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    // Windows bind-mounts into the Docker container don't reliably deliver native
+    // filesystem-change events, so Vite's watcher (chokidar) never fires and the
+    // dev server serves a stale bundle after host-side edits. Polling works
+    // around that at the cost of a bit of CPU.
+    watch: {
+      usePolling: true,
+      interval: 300,
+    },
     proxy: {
       // Lets the dev server talk to the local FastAPI instance without CORS friction.
       '/api': {

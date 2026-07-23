@@ -7,6 +7,7 @@ import { useTheme } from '@/context/ThemeContext'
 import { ProtectedRoute, PublicOnlyRoute } from '@/components/RouteGuards'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { ROLES } from '@/lib/constants'
 
 // Route-level code splitting keeps the initial bundle small.
 const Landing = lazy(() => import('@/pages/Landing'))
@@ -67,16 +68,35 @@ export default function App() {
               <Route path="/agents" element={<AgentsDashboard />} />
               <Route path="/settings" element={<Settings />} />
 
-              <Route path="/dashboard/admin" element={<AdminDashboard />} />
+              {/* These two call backend endpoints that are themselves role-gated
+                  (GET /auth/users is admin/manager-only, POST /agents/run-cycle is
+                  admin/manager/sustainability_officer-only) — restricting the route
+                  itself means a mismatched role gets a clear "Unauthorized" page
+                  instead of a half-loaded dashboard with a 403'd card in it. */}
+              <Route
+                path="/dashboard/admin"
+                element={
+                  <ProtectedRoute roles={[ROLES.ADMIN]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/dashboard/inventory" element={<InventoryDashboard />} />
               <Route path="/dashboard/sustainability" element={<SustainabilityDashboard />} />
-              <Route path="/dashboard/executive" element={<ExecutiveDashboard />} />
+              <Route
+                path="/dashboard/executive"
+                element={
+                  <ProtectedRoute roles={[ROLES.ADMIN, ROLES.MANAGER, ROLES.SUSTAINABILITY_OFFICER]}>
+                    <ExecutiveDashboard />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Later-phase: a dedicated cross-cutting analytics explorer beyond
                   the per-role dashboards above. */}
               <Route
                 path="/analytics"
-                element={<PlaceholderDashboard title="Analytics" phase="Phase 6" endpoints={['/analytics/patients', '/analytics/occupancy']} />}
+                element={<PlaceholderDashboard title="Analytics" phase="a future release" endpoints={['/analytics/patients', '/analytics/occupancy']} />}
               />
             </Route>
 

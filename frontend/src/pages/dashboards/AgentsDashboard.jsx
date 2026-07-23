@@ -45,7 +45,7 @@ export default function AgentsDashboard() {
                     {agent.implemented ? (
                       <Badge variant="success"><CheckCircle2 className="h-3 w-3" /> Active</Badge>
                     ) : (
-                      <Badge variant="outline">Phase 3</Badge>
+                      <Badge variant="outline"><Clock className="h-3 w-3" /> Idle</Badge>
                     )}
                   </div>
                 ))}
